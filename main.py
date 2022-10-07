@@ -82,7 +82,6 @@ def get_data():
                 BOOKS.append(book)
 
     books_dict = [book.get_dict() for book in BOOKS]
-    print(len(BOOKS))
     with open(file_name, "w", encoding="UTF-8") as file:
         json.dump(books_dict, file, indent=4, ensure_ascii=False)
 
