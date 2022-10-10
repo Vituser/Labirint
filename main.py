@@ -15,7 +15,6 @@ class Book:
         self.discount = discount
         self.img_url = img_url
         self.ebook_only = ebook_only
-        self.time = datetime.date.today().strftime("%Y-%m-%d")
 
     def get_dict(self):
         return {
@@ -26,38 +25,40 @@ class Book:
             'discount': self.discount,
             'img_url': self.img_url,
             'ebook_only': self.ebook_only,
-            'time': self.time,
         }
 
     def __str__(self):
         return f"Название: {self.name} Автор: {self.author} Цена: {self.price} Скидка: {self.discount}"
 
 
-BOOKS = []
-
-
-def get_data():
+def get_html(url):
     headers = {
         "user-agent": "Mozilla / 5.0(X11; Linux x86_64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 103.0.0.0 Safari / 537.36",
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
     }
-    genre_num = "2308"
-    file_name = f"labirint-{genre_num}.json"
-    main_url = f"https://www.labirint.ru/genres/{genre_num}/"
 
-    response = requests.get(url=main_url, headers=headers)
+    response = requests.get(url=url, headers=headers)
     soup = BeautifulSoup(response.text, "lxml")
+    return soup
+
+
+def save_json(file_name, data):
+    with open(file_name, "w", encoding="UTF-8") as file:
+        json.dump(data, file, indent=4, ensure_ascii=False)
+
+
+def get_books(main_url):
+    books = []
+    soup = get_html(url=main_url)
 
     pages_count = int(soup.find("div", class_="pagination-numbers").find_all("a")[-1].text)
     for page in range(1, pages_count + 1):
-        url = main_url + f"?page={page}"
+        url_page = main_url + f"?page={page}"
 
-        response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.text, "lxml")
-
+        soup = get_html(url=url_page)
         for i in range(2):
             books_items = soup.find_all("div", class_="genres-carousel__container")[i].find_all("div", "genres-carousel__item")
-            for i, book_item in enumerate(books_items):
+            for book_item in books_items:
                 book = Book()
                 try:
                     b_info = book_item.find_all("div", class_="product need-watch")[0].find("div", class_="product-cover")
@@ -79,15 +80,19 @@ def get_data():
                 except KeyError:
                     pass
                 book.img_url = b_info.find("img")['data-src']
-                BOOKS.append(book)
-
-    books_dict = [book.get_dict() for book in BOOKS]
-    with open(file_name, "w", encoding="UTF-8") as file:
-        json.dump(books_dict, file, indent=4, ensure_ascii=False)
+                books.append(book)
+    return books
 
 
 def main():
-    get_data()
+    genre = "2308"
+    time = datetime.date.today().strftime("%Y-%m-%d")
+    file_name = f"labirint-{genre}-{time}.json"
+    url = f"https://www.labirint.ru/genres/{genre}/"
+
+    books = get_books(main_url=url)
+    books_dict = [book.get_dict() for book in books]
+    save_json(file_name=file_name, data=books_dict)
 
 
 if __name__ == "__main__":
