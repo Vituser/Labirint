@@ -84,10 +84,15 @@ def get_books(main_url):
     return books
 
 
+def get_file_name(genre, name):
+    time = datetime.date.today().strftime("%Y-%m-%d")
+    file_name = f"{name}-{genre}-{time}.json"
+    return file_name
+
+
 def main():
     genre = "2308"
-    time = datetime.date.today().strftime("%Y-%m-%d")
-    file_name = f"labirint-{genre}-{time}.json"
+    file_name = get_file_name(genre, "labirint")
     url = f"https://www.labirint.ru/genres/{genre}/"
 
     books = get_books(main_url=url)
