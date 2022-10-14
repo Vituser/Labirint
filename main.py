@@ -2,6 +2,8 @@ import json
 import datetime
 import requests
 from bs4 import BeautifulSoup
+from typing import *
+from openpyxl.workbook import Workbook
 
 
 class Book:
@@ -31,7 +33,7 @@ class Book:
         return f"Название: {self.name} Автор: {self.author} Цена: {self.price} Скидка: {self.discount}"
 
 
-def get_html(url):
+def get_html(url) -> BeautifulSoup:
     headers = {
         "user-agent": "Mozilla / 5.0(X11; Linux x86_64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 103.0.0.0 Safari / 537.36",
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
@@ -42,12 +44,24 @@ def get_html(url):
     return soup
 
 
-def save_json(file_name, data):
-    with open(file_name, "w", encoding="UTF-8") as file:
+def save_json(file_name,  data) -> NoReturn:
+    with open(file_name + ".json", "w", encoding="UTF-8") as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
 
 
-def get_books(main_url):
+def save_excel(file_name, data) -> NoReturn:
+    headers = list(data[0].keys())
+
+    wb = Workbook()
+    page = wb.active
+    page.title = "data"
+    page.append(headers)
+    for book in data:
+        page.append(list(book.values()))
+    wb.save(filename=file_name + ".xlsx")
+
+
+def get_books(main_url: str) -> List:
     books = []
     soup = get_html(url=main_url)
 
@@ -70,13 +84,13 @@ def get_books(main_url):
                 b_title_idx = b_title.find(" - ")
                 book.author = b_title[:b_title_idx]
                 book.name = b_title[b_title_idx+3:]
-                book.price = b_info.find("span", class_="price-val").find("span").text.replace(" ", "")
+                book.price = int(b_info.find("span", class_="price-val").find("span").text.replace(" ", ""))
                 try:
-                    book.old_price = b_info.find("span", class_="price-gray").text.replace(" ", "")
+                    book.old_price = int(b_info.find("span", class_="price-gray").text.replace(" ", ""))
                 except AttributeError:
                     pass
                 try:
-                    book.discount = b_info.find("span", class_="price-val")['title'].split("% ")[0]
+                    book.discount = int(b_info.find("span", class_="price-val")['title'].split("% ")[0][1:])
                 except KeyError:
                     pass
                 book.img_url = b_info.find("img")['data-src']
@@ -84,13 +98,13 @@ def get_books(main_url):
     return books
 
 
-def get_file_name(genre, name):
+def get_file_name(genre, name) -> AnyStr:
     time = datetime.date.today().strftime("%Y-%m-%d")
-    file_name = f"{name}-{genre}-{time}.json"
+    file_name = f"{name}-{genre}-{time}"
     return file_name
 
 
-def main():
+def main() -> NoReturn:
     genre = "2308"
     file_name = get_file_name(genre, "labirint")
     url = f"https://www.labirint.ru/genres/{genre}/"
@@ -98,6 +112,7 @@ def main():
     books = get_books(main_url=url)
     books_dict = [book.get_dict() for book in books]
     save_json(file_name=file_name, data=books_dict)
+    save_excel(file_name=file_name, data=books_dict)
 
 
 if __name__ == "__main__":
