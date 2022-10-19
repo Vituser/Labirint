@@ -44,7 +44,7 @@ def get_html(url: str) -> BeautifulSoup:
     return soup
 
 
-def save_json(file_name: str,  data: dict) -> NoReturn:
+def save_json(file_name: str,  data: list) -> NoReturn:
     with open(file_name + ".json", "w", encoding="UTF-8") as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
 
