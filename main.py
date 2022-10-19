@@ -33,7 +33,7 @@ class Book:
         return f"Название: {self.name} Автор: {self.author} Цена: {self.price} Скидка: {self.discount}"
 
 
-def get_html(url) -> BeautifulSoup:
+def get_html(url: str) -> BeautifulSoup:
     headers = {
         "user-agent": "Mozilla / 5.0(X11; Linux x86_64) AppleWebKit / 537.36(KHTML, like Gecko) Chrome / 103.0.0.0 Safari / 537.36",
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
@@ -44,12 +44,12 @@ def get_html(url) -> BeautifulSoup:
     return soup
 
 
-def save_json(file_name,  data) -> NoReturn:
+def save_json(file_name: str,  data: dict) -> NoReturn:
     with open(file_name + ".json", "w", encoding="UTF-8") as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
 
 
-def save_excel(file_name, data) -> NoReturn:
+def save_excel(file_name: str, data: list) -> NoReturn:
     headers = list(data[0].keys())
 
     wb = Workbook()
@@ -81,7 +81,7 @@ def get_books(main_url: str) -> List:
                     book.ebook_only = True
 
                 b_title = b_info.find("a")["title"]
-                b_title_idx = b_title.find(" - ")
+                b_title_idx = b_title.rfind(" - ")
                 book.author = b_title[:b_title_idx]
                 book.name = b_title[b_title_idx+3:]
                 book.price = int(b_info.find("span", class_="price-val").find("span").text.replace(" ", ""))
@@ -98,7 +98,7 @@ def get_books(main_url: str) -> List:
     return books
 
 
-def get_file_name(genre, name) -> AnyStr:
+def get_file_name(genre: str, name: str) -> AnyStr:
     time = datetime.date.today().strftime("%Y-%m-%d")
     file_name = f"{name}-{genre}-{time}"
     return file_name
